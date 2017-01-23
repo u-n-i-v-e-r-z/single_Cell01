@@ -1,0 +1,305 @@
+No quality encoding type selected. Assuming that the data provided uses Sanger encoded Phred scores (default)
+
+Path to Cutadapt set as: 'cutadapt' (default)
+Cutadapt seems to be working fine (tested command 'cutadapt --version')
+
+
+AUTO-DETECTING ADAPTER TYPE
+===========================
+Attempting to auto-detect adapter type from the first 1 million sequences of the first file (>> /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1.fastq.gz <<)
+
+Found perfect matches for the following adapter sequences:
+Adapter type	Count	Sequence	Sequences analysed	Percentage
+Nextera	32027	CTGTCTCTTATA	436263	7.34
+smallRNA	0	ATGGAATTCTCG	436263	0.00
+Illumina	0	AGATCGGAAGAGC	436263	0.00
+Using Nextera adapter for trimming (count: 32027). Second best hit was smallRNA (count: 0)
+
+Writing report to '/home/aheurteau/work/LBME/single_Cell01/exp/qualilty_analysis/results/trimmed/29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1.fastq.gz_trimming_report.txt'
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1.fastq.gz
+Trimming mode: paired-end
+Trim Galore version: 0.4.0
+Cutadapt version: 1.8.3
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Adapter sequence: 'CTGTCTCTTATA' (Nextera Transposase sequence; auto-detected)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 5 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Running FastQC on the data once trimming has completed
+Running FastQC with the following extra arguments: '--nogroup --outdir /home/aheurteau/work/LBME/single_Cell01/exp/qualilty_analysis/results/fastqc_graphics'
+Output file(s) will be GZIP compressed
+
+Writing final adapter and quality trimmed output to 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_trimmed.fq.gz
+
+
+  >>> Now performing quality (cutoff 20) and adapter trimming in a single pass for the adapter sequence: 'CTGTCTCTTATA' from file /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1.fastq.gz <<< 
+This is cutadapt 1.8.3 with Python 2.7.2
+Command line parameters: -f fastq -e 0.1 -q 20 -O 5 -a CTGTCTCTTATA /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1.fastq.gz
+Trimming 1 adapter with at most 10.0% errors in single-end mode ...
+Finished in 7.79 s (18 us/read; 3.36 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:                 436,263
+Reads with adapters:                    41,777 (9.6%)
+Reads written (passing filters):       436,263 (100.0%)
+
+Total basepairs processed:    32,719,725 bp
+Quality-trimmed:                 856,527 bp (2.6%)
+Total written (filtered):     30,943,156 bp (94.6%)
+
+=== Adapter 1 ===
+
+Sequence: CTGTCTCTTATA; Type: regular 3'; Length: 12; Trimmed: 41777 times.
+
+No. of allowed errors:
+0-9 bp: 0; 10-12 bp: 1
+
+Bases preceding removed adapters:
+  A: 14.6%
+  C: 38.7%
+  G: 22.2%
+  T: 24.4%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+5	1433	426.0	0	1433
+6	1383	106.5	0	1383
+7	1154	26.6	0	1154
+8	1345	6.7	0	1345
+9	1597	1.7	0	1596 1
+10	1113	0.4	1	1095 18
+11	1192	0.1	1	1178 14
+12	913	0.0	1	903 10
+13	1247	0.0	1	1218 29
+14	1463	0.0	1	1436 27
+15	1516	0.0	1	1482 34
+16	1365	0.0	1	1345 20
+17	1015	0.0	1	993 22
+18	1187	0.0	1	1172 15
+19	1221	0.0	1	1209 12
+20	1204	0.0	1	1183 21
+21	1154	0.0	1	1138 16
+22	860	0.0	1	845 15
+23	1068	0.0	1	1048 20
+24	1171	0.0	1	1142 29
+25	1180	0.0	1	1148 32
+26	1047	0.0	1	1023 24
+27	1004	0.0	1	979 25
+28	1052	0.0	1	1037 15
+29	1212	0.0	1	1190 22
+30	1048	0.0	1	1024 24
+31	990	0.0	1	967 23
+32	776	0.0	1	770 6
+33	895	0.0	1	874 21
+34	787	0.0	1	765 22
+35	829	0.0	1	813 16
+36	1140	0.0	1	1114 26
+37	767	0.0	1	754 13
+38	815	0.0	1	803 12
+39	872	0.0	1	861 11
+40	569	0.0	1	554 15
+41	506	0.0	1	497 9
+42	361	0.0	1	357 4
+43	486	0.0	1	482 4
+44	244	0.0	1	240 4
+45	205	0.0	1	204 1
+46	157	0.0	1	156 1
+47	94	0.0	1	93 1
+48	77	0.0	1	77
+49	23	0.0	1	22 1
+50	14	0.0	1	14
+51	6	0.0	1	6
+52	10	0.0	1	10
+53	4	0.0	1	4
+54	2	0.0	1	2
+55	2	0.0	1	2
+64	2	0.0	1	2
+
+
+RUN STATISTICS FOR INPUT FILE: /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1.fastq.gz
+=============================================
+436263 sequences processed in total
+The length threshold of paired-end sequences gets evaluated later on (in the validation step)
+
+Writing report to '/home/aheurteau/work/LBME/single_Cell01/exp/qualilty_analysis/results/trimmed/29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2.fastq.gz_trimming_report.txt'
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2.fastq.gz
+Trimming mode: paired-end
+Trim Galore version: 0.4.0
+Cutadapt version: 1.8.3
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Adapter sequence: 'CTGTCTCTTATA' (Nextera Transposase sequence; auto-detected)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 5 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Running FastQC on the data once trimming has completed
+Running FastQC with the following extra arguments: '--nogroup --outdir /home/aheurteau/work/LBME/single_Cell01/exp/qualilty_analysis/results/fastqc_graphics'
+Output file(s) will be GZIP compressed
+
+Writing final adapter and quality trimmed output to 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_trimmed.fq.gz
+
+
+  >>> Now performing quality (cutoff 20) and adapter trimming in a single pass for the adapter sequence: 'CTGTCTCTTATA' from file /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2.fastq.gz <<< 
+This is cutadapt 1.8.3 with Python 2.7.2
+Command line parameters: -f fastq -e 0.1 -q 20 -O 5 -a CTGTCTCTTATA /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2.fastq.gz
+Trimming 1 adapter with at most 10.0% errors in single-end mode ...
+Finished in 7.99 s (18 us/read; 3.28 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:                 436,263
+Reads with adapters:                    40,448 (9.3%)
+Reads written (passing filters):       436,263 (100.0%)
+
+Total basepairs processed:    32,719,725 bp
+Quality-trimmed:                 790,866 bp (2.4%)
+Total written (filtered):     31,043,634 bp (94.9%)
+
+=== Adapter 1 ===
+
+Sequence: CTGTCTCTTATA; Type: regular 3'; Length: 12; Trimmed: 40448 times.
+
+No. of allowed errors:
+0-9 bp: 0; 10-12 bp: 1
+
+Bases preceding removed adapters:
+  A: 14.6%
+  C: 39.3%
+  G: 21.8%
+  T: 24.4%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+5	1400	426.0	0	1400
+6	1329	106.5	0	1329
+7	1098	26.6	0	1098
+8	1294	6.7	0	1294
+9	1513	1.7	0	1513
+10	1084	0.4	1	1054 30
+11	1186	0.1	1	1150 36
+12	930	0.0	1	897 33
+13	1235	0.0	1	1180 55
+14	1438	0.0	1	1387 51
+15	1476	0.0	1	1418 58
+16	1373	0.0	1	1327 46
+17	995	0.0	1	967 28
+18	1178	0.0	1	1137 41
+19	1219	0.0	1	1167 52
+20	1150	0.0	1	1117 33
+21	1117	0.0	1	1062 55
+22	858	0.0	1	830 28
+23	1004	0.0	1	971 33
+24	1160	0.0	1	1122 38
+25	1150	0.0	1	1116 34
+26	1010	0.0	1	985 25
+27	961	0.0	1	935 26
+28	1061	0.0	1	1025 36
+29	1182	0.0	1	1130 52
+30	972	0.0	1	942 30
+31	952	0.0	1	906 46
+32	747	0.0	1	724 23
+33	898	0.0	1	852 46
+34	808	0.0	1	763 45
+35	781	0.0	1	740 41
+36	1073	0.0	1	1038 35
+37	711	0.0	1	674 37
+38	798	0.0	1	770 28
+39	801	0.0	1	768 33
+40	518	0.0	1	500 18
+41	468	0.0	1	448 20
+42	321	0.0	1	301 20
+43	327	0.0	1	320 7
+44	288	0.0	1	275 13
+45	212	0.0	1	206 6
+46	177	0.0	1	171 6
+47	82	0.0	1	80 2
+48	64	0.0	1	61 3
+49	14	0.0	1	13 1
+50	10	0.0	1	10
+51	6	0.0	1	6
+52	9	0.0	1	9
+53	3	0.0	1	3
+54	2	0.0	1	2
+55	2	0.0	1	2
+57	1	0.0	1	0 1
+63	1	0.0	1	1
+64	1	0.0	1	1
+
+
+RUN STATISTICS FOR INPUT FILE: /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2.fastq.gz
+=============================================
+436263 sequences processed in total
+The length threshold of paired-end sequences gets evaluated later on (in the validation step)
+
+Validate paired-end files 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_trimmed.fq.gz and 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_trimmed.fq.gz
+file_1: 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_trimmed.fq.gz, file_2: 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_trimmed.fq.gz
+
+
+>>>>> Now validing the length of the 2 paired-end infiles: 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_trimmed.fq.gz and 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_trimmed.fq.gz <<<<<
+Writing validated paired-end read 1 reads to 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Writing validated paired-end read 2 reads to 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+
+Total number of sequences analysed: 436263
+
+Number of sequence pairs removed because at least one read was shorter than the length cutoff (20 bp): 4267 (0.98%)
+
+
+  >>> Now running FastQC on the validated data 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz<<<
+
+Started analysis of 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 5% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 10% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 15% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 20% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 25% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 30% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 35% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 40% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 45% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 50% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 55% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 60% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 65% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 70% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 75% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 80% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 85% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 90% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+Approx 95% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_val_1.fq.gz
+
+  >>> Now running FastQC on the validated data 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz<<<
+
+Started analysis of 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 5% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 10% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 15% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 20% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 25% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 30% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 35% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 40% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 45% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 50% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 55% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 60% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 65% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 70% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 75% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 80% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 85% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 90% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Approx 95% complete for 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_val_2.fq.gz
+Deleting both intermediate output files 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R1_trimmed.fq.gz and 29645-C-15_TAAGGCGA-CTCTCTAT_L001_R2_trimmed.fq.gz
+
+====================================================================================================
+

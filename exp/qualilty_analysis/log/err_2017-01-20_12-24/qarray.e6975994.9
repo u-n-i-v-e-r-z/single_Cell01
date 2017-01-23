@@ -1,0 +1,173 @@
+No quality encoding type selected. Assuming that the data provided uses Sanger encoded Phred scores (default)
+
+Path to Cutadapt set as: 'cutadapt' (default)
+Cutadapt seems to be working fine (tested command 'cutadapt --version')
+
+
+AUTO-DETECTING ADAPTER TYPE
+===========================
+Attempting to auto-detect adapter type from the first 1 million sequences of the first file (>> /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-64_CGTACTAG-CTCTCTAT_L001_R1.fastq.gz <<)
+
+Found perfect matches for the following adapter sequences:
+Adapter type	Count	Sequence	Sequences analysed	Percentage
+Nextera	9	CTGTCTCTTATA	501	1.80
+smallRNA	0	ATGGAATTCTCG	501	0.00
+Illumina	0	AGATCGGAAGAGC	501	0.00
+Using Nextera adapter for trimming (count: 9). Second best hit was smallRNA (count: 0)
+
+Writing report to '/home/aheurteau/work/LBME/single_Cell01/exp/qualilty_analysis/results/trimmed/29645-C-64_CGTACTAG-CTCTCTAT_L001_R1.fastq.gz_trimming_report.txt'
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-64_CGTACTAG-CTCTCTAT_L001_R1.fastq.gz
+Trimming mode: paired-end
+Trim Galore version: 0.4.0
+Cutadapt version: 1.8.3
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Adapter sequence: 'CTGTCTCTTATA' (Nextera Transposase sequence; auto-detected)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 5 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Running FastQC on the data once trimming has completed
+Running FastQC with the following extra arguments: '--nogroup --outdir /home/aheurteau/work/LBME/single_Cell01/exp/qualilty_analysis/results/fastqc_graphics'
+Output file(s) will be GZIP compressed
+
+Writing final adapter and quality trimmed output to 29645-C-64_CGTACTAG-CTCTCTAT_L001_R1_trimmed.fq.gz
+
+
+  >>> Now performing quality (cutoff 20) and adapter trimming in a single pass for the adapter sequence: 'CTGTCTCTTATA' from file /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-64_CGTACTAG-CTCTCTAT_L001_R1.fastq.gz <<< 
+This is cutadapt 1.8.3 with Python 2.7.2
+Command line parameters: -f fastq -e 0.1 -q 20 -O 5 -a CTGTCTCTTATA /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-64_CGTACTAG-CTCTCTAT_L001_R1.fastq.gz
+Trimming 1 adapter with at most 10.0% errors in single-end mode ...
+Finished in 0.02 s (40 us/read; 1.50 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:                     501
+Reads with adapters:                        10 (2.0%)
+Reads written (passing filters):           501 (100.0%)
+
+Total basepairs processed:        37,575 bp
+Quality-trimmed:                  15,745 bp (41.9%)
+Total written (filtered):         21,585 bp (57.4%)
+
+=== Adapter 1 ===
+
+Sequence: CTGTCTCTTATA; Type: regular 3'; Length: 12; Trimmed: 10 times.
+
+No. of allowed errors:
+0-9 bp: 0; 10-12 bp: 1
+
+Bases preceding removed adapters:
+  A: 10.0%
+  C: 10.0%
+  G: 20.0%
+  T: 60.0%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+5	1	0.5	0	1
+15	3	0.0	1	3
+20	1	0.0	1	1
+26	1	0.0	1	1
+33	1	0.0	1	1
+38	1	0.0	1	1
+39	2	0.0	1	2
+
+
+RUN STATISTICS FOR INPUT FILE: /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-64_CGTACTAG-CTCTCTAT_L001_R1.fastq.gz
+=============================================
+501 sequences processed in total
+The length threshold of paired-end sequences gets evaluated later on (in the validation step)
+
+Writing report to '/home/aheurteau/work/LBME/single_Cell01/exp/qualilty_analysis/results/trimmed/29645-C-64_CGTACTAG-CTCTCTAT_L001_R2.fastq.gz_trimming_report.txt'
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-64_CGTACTAG-CTCTCTAT_L001_R2.fastq.gz
+Trimming mode: paired-end
+Trim Galore version: 0.4.0
+Cutadapt version: 1.8.3
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Adapter sequence: 'CTGTCTCTTATA' (Nextera Transposase sequence; auto-detected)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 5 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Running FastQC on the data once trimming has completed
+Running FastQC with the following extra arguments: '--nogroup --outdir /home/aheurteau/work/LBME/single_Cell01/exp/qualilty_analysis/results/fastqc_graphics'
+Output file(s) will be GZIP compressed
+
+Writing final adapter and quality trimmed output to 29645-C-64_CGTACTAG-CTCTCTAT_L001_R2_trimmed.fq.gz
+
+
+  >>> Now performing quality (cutoff 20) and adapter trimming in a single pass for the adapter sequence: 'CTGTCTCTTATA' from file /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-64_CGTACTAG-CTCTCTAT_L001_R2.fastq.gz <<< 
+This is cutadapt 1.8.3 with Python 2.7.2
+Command line parameters: -f fastq -e 0.1 -q 20 -O 5 -a CTGTCTCTTATA /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-64_CGTACTAG-CTCTCTAT_L001_R2.fastq.gz
+Trimming 1 adapter with at most 10.0% errors in single-end mode ...
+Finished in 0.02 s (40 us/read; 1.50 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:                     501
+Reads with adapters:                         5 (1.0%)
+Reads written (passing filters):           501 (100.0%)
+
+Total basepairs processed:        37,575 bp
+Quality-trimmed:                  13,851 bp (36.9%)
+Total written (filtered):         23,615 bp (62.8%)
+
+=== Adapter 1 ===
+
+Sequence: CTGTCTCTTATA; Type: regular 3'; Length: 12; Trimmed: 5 times.
+
+No. of allowed errors:
+0-9 bp: 0; 10-12 bp: 1
+
+Bases preceding removed adapters:
+  A: 20.0%
+  C: 20.0%
+  G: 40.0%
+  T: 20.0%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+5	1	0.5	0	1
+12	1	0.0	1	0 1
+20	1	0.0	1	1
+33	1	0.0	1	0 1
+39	1	0.0	1	1
+
+
+RUN STATISTICS FOR INPUT FILE: /home/aheurteau/work/LBME/single_Cell01/raw/fastq//29645-C-64_CGTACTAG-CTCTCTAT_L001_R2.fastq.gz
+=============================================
+501 sequences processed in total
+The length threshold of paired-end sequences gets evaluated later on (in the validation step)
+
+Validate paired-end files 29645-C-64_CGTACTAG-CTCTCTAT_L001_R1_trimmed.fq.gz and 29645-C-64_CGTACTAG-CTCTCTAT_L001_R2_trimmed.fq.gz
+file_1: 29645-C-64_CGTACTAG-CTCTCTAT_L001_R1_trimmed.fq.gz, file_2: 29645-C-64_CGTACTAG-CTCTCTAT_L001_R2_trimmed.fq.gz
+
+
+>>>>> Now validing the length of the 2 paired-end infiles: 29645-C-64_CGTACTAG-CTCTCTAT_L001_R1_trimmed.fq.gz and 29645-C-64_CGTACTAG-CTCTCTAT_L001_R2_trimmed.fq.gz <<<<<
+Writing validated paired-end read 1 reads to 29645-C-64_CGTACTAG-CTCTCTAT_L001_R1_val_1.fq.gz
+Writing validated paired-end read 2 reads to 29645-C-64_CGTACTAG-CTCTCTAT_L001_R2_val_2.fq.gz
+
+Total number of sequences analysed: 501
+
+Number of sequence pairs removed because at least one read was shorter than the length cutoff (20 bp): 96 (19.16%)
+
+
+  >>> Now running FastQC on the validated data 29645-C-64_CGTACTAG-CTCTCTAT_L001_R1_val_1.fq.gz<<<
+
+Started analysis of 29645-C-64_CGTACTAG-CTCTCTAT_L001_R1_val_1.fq.gz
+
+  >>> Now running FastQC on the validated data 29645-C-64_CGTACTAG-CTCTCTAT_L001_R2_val_2.fq.gz<<<
+
+Started analysis of 29645-C-64_CGTACTAG-CTCTCTAT_L001_R2_val_2.fq.gz
+Deleting both intermediate output files 29645-C-64_CGTACTAG-CTCTCTAT_L001_R1_trimmed.fq.gz and 29645-C-64_CGTACTAG-CTCTCTAT_L001_R2_trimmed.fq.gz
+
+====================================================================================================
+

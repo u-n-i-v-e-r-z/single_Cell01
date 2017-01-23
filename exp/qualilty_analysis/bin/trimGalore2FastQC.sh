@@ -54,23 +54,18 @@ done
 # Qarray Errors
 mkdir -p ${qarray_out_path}/{out_`date +%F_%H-%M`,err_`date +%F_%H-%M`}
 
-for pool in $(ls ${fastq_path})
-do
-if [ -d ${fastq_path}/${pool} ]
-then
-	mkdir -p ${out_path}/${pool}
-	mkdir -p ${out_trim_path}/${pool}
-	cd ${fastq_path}/${pool}
-	if [ -s ${out_path}/${pool}/trace.cmd ];then rm ${out_path}/${pool}/trace.cmd;fi
+
+	mkdir -p ${out_path}
+	mkdir -p ${out_trim_path}
+	cd ${fastq_path}
+	if [ -s ${out_path}/trace.cmd ];then rm ${out_path}/trace.cmd;fi
 	for r1 in `ls *R1*`
 	do
 	replaceBy="R2"
 	r2="${r1/R1/$replaceBy}"
 	script_name=$0
 	sub_dir=${sub_path}/${script_name%.*}_sub.sh
-	echo ${trimG} -q 20 -stringency 5 --fastqc_args \"--nogroup --outdir ${out_path}/${pool}\" -o ${out_trim_path}/${pool} --paired ${fastq_path}/${pool}/${r1} ${fastq_path}/${pool}/${r2} >> ${out_path}/${pool}/trace.cmd
-	echo ${trimG} -q 20 -stringency 5 --fastqc_args \"--nogroup --outdir ${out_path}/${pool}\" -o ${out_trim_path}/${pool} --paired ${fastq_path}/${pool}/${r1} ${fastq_path}/${pool}/${r2} >> ${sub_dir}
+	echo ${trimG} -q 20 -stringency 5 --fastqc_args \"--nogroup --outdir ${out_path}\" -o ${out_trim_path} --paired ${fastq_path}/${r1} ${fastq_path}/${r2} >> ${out_path}/trace.cmd
+	echo ${trimG} -q 20 -stringency 5 --fastqc_args \"--nogroup --outdir ${out_path}\" -o ${out_trim_path} --paired ${fastq_path}/${r1} ${fastq_path}/${r2} >> ${sub_dir}
 	done
 	cd ../
-fi
-done
