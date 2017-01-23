@@ -3,3 +3,4 @@
 *.sam
 *.fq*
 *.fastq*
+.Rproj.user
