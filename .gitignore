@@ -7,3 +7,8 @@
 .Rproj.user
 *.tmp
 *.Tmp
+*.gz
+raw/
+results/
+*.fasta
+*.log

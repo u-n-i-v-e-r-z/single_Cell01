@@ -1,0 +1,72 @@
+#  Copyright (C) 2015 INRA
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+
+#  Date: 09.03.2016 11:34:24 CET
+
+# Sort Bam files with samtools version 1.3
+
+#!/bin/bash
+#Toolspath
+samTools="/usr/local/bioinfo/src/samtools/samtools-1.3/samtools"
+
+# GET OPTION
+while getopts "b:o:l:s:h" option
+do
+case $option in
+    b)
+        bam_path=$OPTARG
+        ;;
+    o)
+        out_path=$OPTARG
+        ;;
+    l)
+        qarray_out_path=$OPTARG
+        ;;
+    s)
+        sub_path=${OPTARG%%.*}
+        ;;
+    \?)
+        echo "-b emplacement of .bam input files eg:/my/bamfiles/directory"
+        echo "-o where should be written sorted bamfiles eg: /my/sorted_bamfiles/directory (created by the script if doesn't exists)"
+        echo "-l log directory where error and output of qarray will be written (created by the script if doesn't exists) eg: /my/log/directory"
+        echo "-s where the script that will be launched by qarray should be written eg: /my/out/directory"
+        echo "-h Display this help"
+        exit 1
+        ;;
+    h)
+        echo "-b emplacement of .bam input files eg:/my/bamfiles/directory"
+        echo "-o where should be written sorted bamfiles eg: /my/sorted_bamfiles/directory (created by the script if doesn't exists)"
+        echo "-l log directory where error and output of qarray will be written (created by the script if doesn't exists) eg: /my/log/directory"
+        echo "-s where the script that will be launched by qarray should be written eg: /my/out/directory"
+        echo "-h Display this help"
+        ;;
+esac
+done
+
+#Log path
+mkdir -p ${qarray_out_path}/{out_`date +%F_%H-%M`,err_`date +%F_%H-%M`}
+mkdir -p ${out_path}
+script_name=$0
+sub_dir=${sub_path}/${script_name%.*}_sub.sh
+if [ -s ${sub_dir} ];then rm ${sub_dir};fi
+cd ${bam_path}
+for bamFile in $(ls *.bam)
+do
+  runName=${bamFile%%.*}
+  echo ${samTools} sort ${bam_path}/${bamFile} -o ${out_path}/${runName}.srt.bam >> ${out_path}/trace
+  echo ${samTools} sort ${bam_path}/${bamFile} -o ${out_path}/${runName}.srt.bam >> ${sub_dir}
+done
