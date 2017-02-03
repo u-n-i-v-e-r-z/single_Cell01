@@ -12,3 +12,4 @@ raw/
 results/
 *.fasta
 *.log
+log/
