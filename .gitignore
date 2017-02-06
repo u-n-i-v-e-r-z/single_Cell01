@@ -13,3 +13,4 @@ results/
 *.fasta
 *.log
 log/
+.md
