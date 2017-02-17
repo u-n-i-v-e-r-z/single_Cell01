@@ -1,0 +1,262 @@
+---
+title: "RNAseq Single Cell - Impact of dMes4 on gene regulation: Differential variability analysis"
+author: "Schaak, Heurteau"
+date: "February 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+########################################################################################
+<!--     ### LIBRARY LOADING / SET WORKING DIRECTORY / LOAD FILES -->
+########################################################################################
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(GenomicAlignments)
+library(stringr)
+library("limma")
+library("edgeR")
+library("DESeq2")
+library(dplyr)
+```
+
+<!-- Set working directory (path to git clone on local computer) -->
+```{r, echo=FALSE}
+rm(list=ls())
+wDir <- "/media/alexandre/Data/Recherche/LBME/Projects/sCell_RNAseq_clone"
+
+```
+
+
+<!-- Load sample infos and count matrix ; select samples (and create filters for selected cells) -->
+```{r echo=FALSE}
+
+sampleInfo_df <- readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/sampleTable.rds",sep="/"))
+sc613_sumexp <- readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/scSovl613.rds",sep="/"))
+rawCnt_mtx <- assay(sc613_sumexp)
+
+
+
+```
+
+
+########################################################################################
+##           PLOT RAW DATA BEFORE SELECTING
+########################################################################################
+
+```{r}
+
+# readsTot ~ expressedGenes
+barplot(colSums(rawCnt_mtx),ylab="Reads sum",col=as.character(sampleInfo_df$color),las=2)
+abline(h=2.5E4,col="blue",lty=2)
+plot(colSums(rawCnt_mtx),colSums(rawCnt_mtx>0),col=as.character(sampleInfo_df$color),pch=16,xlab="Reads sum",ylab="#Expressed genes (>1 read)")
+abline(v=2.5E4,col="blue",lty=2)
+abline(h=1E3,col="blue",lty=2)
+legend(1, 4000, legend=c("Ctrl", "Mes4KD"),
+       col=c("green4", "red"), bg="white",pch=16, cex=0.8)
+
+```
+
+<!-- Select cell that have more than 2.5E4 reads  -->
+```{r echo=F}
+
+cellSelection <- which(colSums(rawCnt_mtx)>2.5E4)
+rawCnt_mtx %>% subset(select=cellSelection) -> rawCnt_cSel_mtx
+sampleInfo_df %>% add_rownames() -> sampleInfo_df
+sampleInfo_df %>% filter(rowname %in% names(cellSelection)) -> sInfo_cSel_df
+sInfo_cSel_df %>% filter(condition=="Ctrl") -> sInfoCtrl_cSel_df
+sInfo_cSel_df %>% filter(condition=="Mes4KD") -> sInfoMes4KD_cSel_df
+# Create Masks and Selects for further analysis
+sampleCtrl_msk <- sInfo_cSel_df$condition=="Ctrl"
+sampleMes4KD_msk <- sInfo_cSel_df$condition=="Mes4KD"
+sampleCtrl_slct <- which(sInfo_cSel_df$condition=="Ctrl")
+sampleMes4KD_slct <- which(sInfo_cSel_df$condition=="Mes4KD")
+```
+ 
+
+ 
+ 
+ 
+########################################################################################
+##                      RENOMMER VARIABLE ET FAIRE PLOT DESCRIPTIF
+########################################################################################
+
+<!-- Select genes expressed in at least 2 controls & 2 Mes4 KD  -->
+```{r echo=F}
+# gene1Expr_msk=rowSums(rawCountMat[,cellSelection]>0)>0
+# length(which((rowSums(rawCountMat[,cellSelection]>0)>0) == T))
+# 6990
+# gene1Expr2ctrOr2mes4_msk=rowSums(rawCountMat[,sel11selectCtrl]>0)>=2 | rowSums(rawCountMat[,sel11selectMes4KD]>0)>=2
+# length(which((rowSums(rawCountMat[,sel11selectCtrl]>0)>=2 | rowSums(rawCountMat[,sel11selectMes4KD]>0)>=2) == T))
+# 4784
+geneFilter_msk <- rowSums(rawCnt_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_mtx[,sampleMes4KD_slct]>0)>=2
+geneNmes_vec <- rownames(rawCnt_cSel_mtx)[geneFilter_msk]
+# length(which((rowSums(rawCountMat[,sel11selectCtrl]>0)>=2 & rowSums(rawCountMat[,sel11selectMes4KD]>0)>=2) == T))
+# 3142
+```
+
+
+
+
+########################################################################################
+##                      LIMMA DIFFERENTIAL EXPRESSION ANALYSIS
+########################################################################################
+
+```{r echo=F}
+
+# Create a DGE List object 
+dge_l=DGEList(counts=subset(rawCnt_cSel_mtx,subset=geneFilter_msk,select=TRUE))
+# Normalize it
+dgeNorm_l=calcNormFactors(dge_l)
+# Add a design matrix (identify samples type -> Ctrl/Mes4KD)
+design_mtx=model.matrix(~sInfo_cSel_df$condition)
+# Launch VOOM transform + Plot Mean-Variance 
+voom_res=voom(dge_l,design=design_mtx,plot=TRUE)
+voomNorm_res=voom(dgeNorm_l,design=design_mtx,plot=TRUE)
+# Fit a linear regression so each gene read counts will be normally distributed
+voomNorm_lmfit=lmFit(voomNorm_res,design_mtx)
+
+```
+
+
+
+```{r}
+
+#Then try different fittin method to assess the differential expression between these two conditions
+# First: eBayes
+DE_ebayes=eBayes(voomNorm_lmfit)
+DE_ebayes_sum=topTable(DE_ebayes,coef=ncol(design_mtx),number=dim(DE_ebayes)[1])
+#
+# Second : Treat
+DE_treat=treat(DE_ebayes,lfc=log2(1.2))
+DE_treat_sum=topTreat(DE_treat,coef=ncol(design_mtx),number=dim(DE_treat)[1])
+# Plot MDS to see how well experiment clulster by variance
+plotMDS(voomNorm_res,col=as.character(sInfo_cSel_df$color),main="MDS plot")
+
+```
+
+
+
+########################################################################################
+##                      DESEQ DIFFERENTIAL EXPRESSION ANALYSIS
+########################################################################################
+```{r}
+#Create a DESeq data set structure to do the DE analysis
+dds=DESeqDataSet(
+  subset(
+    sc613_sumexp,subset=elementMetadata(rowRanges(sc613_sumexp))@listData$gene_id%in%geneNmes_vec,
+    select=rownames(colData(sc613_sumexp))%in%(sInfo_cSel_df$rowname)),
+  design=~condition)
+#
+head(assay(dds))
+colData(dds)
+# Apply the DESeq DE algorithm
+des=DESeq(dds)
+# 
+dds_esf=estimateSizeFactors(dds)
+#
+rLogDds=rlog(dds,blind=FALSE)
+#
+head(assay(rLogDds))
+#
+#
+(deseq_res=results(des))
+#
+mcols(deseq_res,use.names=TRUE)
+```
+
+########################################################################################
+##                      COMPARISON VOOM & DESeq
+########################################################################################
+```{r}
+
+voomCnts_mtx=voomNorm_res$E[order(rownames(voomNorm_res$E),decreasing=FALSE),]
+DE_ebayes_sorted_sum=DE_ebayes_sum[order(rownames(DE_ebayes_sum),decreasing=FALSE),]
+DE_treat_sorted_sum=DE_treat_sum[order(rownames(DE_treat_sum),decreasing=FALSE),]
+#
+if (identical(rownames(voomCnts_mtx),rownames(DE_ebayes_sorted_sum)) & identical(rownames(voomCnts_mtx),rownames(DE_treat_sorted_sum))) {
+  expr_mtx=data.frame(row.names=rownames(rawCnt_cSel_mtx)[geneFilter_msk])
+  var_mtx=data.frame(row.names=rownames(rawCnt_cSel_mtx)[geneFilter_msk])
+  nsd_mtx=data.frame(row.names=rownames(rawCnt_cSel_mtx)[geneFilter_msk])
+}
+
+# Now let's summarize voom analysis on DE genes for each group (control vs mes4KD)
+expr_mtx$meanVoomExpr=apply(voomCnts_mtx,1,mean)
+expr_mtx$meanVoomExprCtrl=apply(voomCnts_mtx,1,function(x) mean(x[sampleCtrl_slct]))
+expr_mtx$meanVoomExprMes4KD=apply(voomCnts_mtx,1,function(x) mean(x[sampleMes4KD_slct]))
+expr_mtx$voomLogFC=DE_ebayes_sorted_sum$logFC
+expr_mtx$voomPval=DE_ebayes_sorted_sum$P.Value
+# And for the analysis of variance
+var_mtx$varVoomExpr=apply(voomCnts_mtx,1,var)
+var_mtx$varVoomExprCtrl=apply(voomCnts_mtx,1,function(x) var(x[sampleCtrl_slct]))
+var_mtx$varVoomExprMes4KD=apply(voomCnts_mtx,1,function(x) var(x[sampleMes4KD_slct]))
+fTest_voom_ll=apply(voomCnts_mtx,1,function(x) var.test(x[sampleCtrl_slct],x[sampleMes4KD_slct]))
+var_mtx$varFval=sapply(fTest_voom_ll,function(x) x$statistic)
+var_mtx$varPval=sapply(fTest_voom_ll,function(x) x$p.value)
+
+```
+
+```{r}
+# Now let's summarize DEseq analysis on DE genes for each group (control vs mes4KD)
+if (identical(rownames(expr_mtx),rownames(deseq_res))) {
+  expr_mtx$meanDeseqExpr=deseq_res$baseMean
+  expr_mtx$meanDeseqExprCtrl=apply(counts(des,normalized=TRUE)[,sampleCtrl_slct],1,mean)
+  expr_mtx$meanDeseqExprMes4KD=apply(counts(des,normalized=TRUE)[,sampleMes4KD_slct],1,mean)
+  expr_mtx$deseqLogFC=deseq_res$log2FoldChange
+  expr_mtx$deseqPval=deseq_res$pvalue
+}
+
+# You cna perform a PCA to see if there's a good separation between Ctrl's & KD's
+
+pca <- as.data.frame(prcomp(t(na.omit(counts(des, normalized=TRUE))))$x) 
+col <- 1:5 
+groups <- colData(dds)$condition 
+plot(PC2~PC1, data=pca, bg=col[groups], pch=21, main="DESeq2")
+text(pca$PC1,pca$PC2,label=colData(des)$condition,pos=1)
+
+pca <- as.data.frame(prcomp(t(na.omit(voomNorm_res$E)))$x) 
+plot(PC2~PC1, data=pca, bg=col[groups], pch=21, main="voom")
+text(pca$PC1,pca$PC2,label=colData(dds)$condition,pos=1)
+```
+
+
+
+<!-- TEST NORMALITY OF THE VOOM TRANSFORMED DATA SET -->
+```{r} 
+shapTest_df=data.frame(row.names=rownames(voomCnts_mtx))
+#
+# -> faire test normalite sur donées avant et après voom-transformation
+#
+shapTestCtrl=apply(voomCnts_mtx[,sampleCtrl_slct],1,shapiro.test)
+shapTestMes4KD=apply(voomCnts_mtx[,sampleMes4KD_slct],1,shapiro.test)
+#
+shapTest_df$vommCtrl=sapply(shapTestCtrl,function(x) x$p.value)
+shapTest_df$vommMes4KD=sapply(shapTestMes4KD,function(x) x$p.value)
+#
+table(apply(shapTest_df,1,min)<0.1)
+# FALSE  TRUE 
+# 2192   950 
+#
+plot(expr_mtx$meanVoomExprCtrl,log2(expr_mtx$meanDeseqExprCtrl),xlim=c(2,16),ylim=c(-5,12),pch=16,col="green4",cex=0.5)
+# ****************************************************************************
+#
+# var test on voom-trasnformed data & nsd calculation
+#
+# ****************************************************************************
+
+# calculs NSD (sur rpkm/log/? => rpm par Pascal)
+#
+rpmCnt_cSel_mtx=apply(rawCnt_cSel_mtx,2,function(x) x/sum(x)*1E6)
+rmpCntNA_cSel_mtx=replace(rpmCnt_cSel_mtx,which(rpmCnt_cSel_mtx==0),NA)
+#
+nsd_mtx$nsdRpmCtrl=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
+nsd_mtx$nsdRpmMes4KD=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleMes4KD_slct],na.rm=TRUE)/mean(x[sampleMes4KD_slct],na.rm=TRUE))
+nsd_mtx$deltaNsdRpm=nsd_mtx$nsdRpmMes4KD - nsd_mtx$nsdRpmCtrl
+#
+nsd_mtx$nsdVoomCtrl=apply(voomCnts_mtx,1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
+nsd_mtx$nsdVoomMes4KD=apply(voomCnts_mtx,1,function(x) sd(x[sampleMes4KD_slct],na.rm=TRUE)/mean(x[sampleMes4KD_slct],na.rm=TRUE))
+nsd_mtx$deltaNsdVoom=nsd_mtx$nsdVoomMes4KD - nsd_mtx$nsdVoomCtrl
+```
+
