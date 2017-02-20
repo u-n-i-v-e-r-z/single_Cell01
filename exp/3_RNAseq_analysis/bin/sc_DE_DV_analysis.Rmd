@@ -25,7 +25,11 @@ library(dplyr)
 <!-- Set working directory (path to git clone on local computer) -->
 ```{r, echo=FALSE}
 rm(list=ls())
-wDir <- "/media/alexandre/Data/Recherche/LBME/Projects/sCell_RNAseq_clone"
+cat("\014") # to clear console
+# wDir <- "/media/alexandre/Data/Recherche/LBME/Projects/sCell_RNAseq_clone"
+wDir <- c("/media/alexandre/Data/Recherche/LBME/Projects/sCell_RNAseq_clone","/home/stef/Documents/New_Labo_Janv2017/singleCellRNAseq01")
+wDir <- ifelse(dir.exists(wDir[1]),wDir[1],ifelse(dir.exists(wDir[2]),wDir[2],"error_selecting_wDir"))
+setwd(wDir)
 
 ```
 
@@ -85,16 +89,14 @@ sampleMes4KD_slct <- which(sInfo_cSel_df$condition=="Mes4KD")
 
 <!-- Select genes expressed in at least 2 controls & 2 Mes4 KD  -->
 ```{r echo=F}
-# gene1Expr_msk=rowSums(rawCountMat[,cellSelection]>0)>0
-# length(which((rowSums(rawCountMat[,cellSelection]>0)>0) == T))
+# length(which((rowSums(rawCnt_mtx[,cellSelection]>0)>0) == T))
 # 6990
-# gene1Expr2ctrOr2mes4_msk=rowSums(rawCountMat[,sel11selectCtrl]>0)>=2 | rowSums(rawCountMat[,sel11selectMes4KD]>0)>=2
-# length(which((rowSums(rawCountMat[,sel11selectCtrl]>0)>=2 | rowSums(rawCountMat[,sel11selectMes4KD]>0)>=2) == T))
+# length(which((rowSums(rawCnt_mtx[,sampleCtrl_slct]>0)>=2 | rowSums(rawCnt_mtx[,sampleMes4KD_slct]>0)>=2) == T))
 # 4784
+# length(which((rowSums(rawCnt_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_mtx[,sampleMes4KD_slct]>0)>=2) == T))
+# 3142
 geneFilter_msk <- rowSums(rawCnt_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_mtx[,sampleMes4KD_slct]>0)>=2
 geneNmes_vec <- rownames(rawCnt_cSel_mtx)[geneFilter_msk]
-# length(which((rowSums(rawCountMat[,sel11selectCtrl]>0)>=2 & rowSums(rawCountMat[,sel11selectMes4KD]>0)>=2) == T))
-# 3142
 ```
 
 
@@ -168,9 +170,14 @@ mcols(deseq_res,use.names=TRUE)
 ```
 
 ########################################################################################
-##                      COMPARISON VOOM & DESeq
+##                      COMPARISON Rpm, VOOM & DESeq
 ########################################################################################
 ```{r}
+
+#
+rpmCnt_cSel_mtx=apply(rawCnt_cSel_mtx,2,function(x) x/sum(x)*1E6)
+rmpCntNA_cSel_mtx=replace(rpmCnt_cSel_mtx,which(rpmCnt_cSel_mtx==0),NA)
+#
 
 voomCnts_mtx=voomNorm_res$E[order(rownames(voomNorm_res$E),decreasing=FALSE),]
 DE_ebayes_sorted_sum=DE_ebayes_sum[order(rownames(DE_ebayes_sum),decreasing=FALSE),]
@@ -179,8 +186,14 @@ DE_treat_sorted_sum=DE_treat_sum[order(rownames(DE_treat_sum),decreasing=FALSE),
 if (identical(rownames(voomCnts_mtx),rownames(DE_ebayes_sorted_sum)) & identical(rownames(voomCnts_mtx),rownames(DE_treat_sorted_sum))) {
   expr_mtx=data.frame(row.names=rownames(rawCnt_cSel_mtx)[geneFilter_msk])
   var_mtx=data.frame(row.names=rownames(rawCnt_cSel_mtx)[geneFilter_msk])
-  nsd_mtx=data.frame(row.names=rownames(rawCnt_cSel_mtx)[geneFilter_msk])
+  # nsd_mtx=data.frame(row.names=rownames(rawCnt_cSel_mtx)[geneFilter_msk])
 }
+
+#
+expr_mtx$meanRpmExpr=apply(rmpCntNA_cSel_mtx[geneFilter_msk,],1,mean,na.rm=TRUE)
+expr_mtx$meanRpmExprCtrl=apply(rmpCntNA_cSel_mtx[geneFilter_msk,sampleCtrl_slct],1,mean,na.rm=TRUE)
+expr_mtx$meanRpmExprMes4KD=apply(rmpCntNA_cSel_mtx[geneFilter_msk,sampleMes4KD_slct],1,mean,na.rm=TRUE)
+#
 
 # Now let's summarize voom analysis on DE genes for each group (control vs mes4KD)
 expr_mtx$meanVoomExpr=apply(voomCnts_mtx,1,mean)
@@ -208,7 +221,7 @@ if (identical(rownames(expr_mtx),rownames(deseq_res))) {
   expr_mtx$deseqPval=deseq_res$pvalue
 }
 
-# You cna perform a PCA to see if there's a good separation between Ctrl's & KD's
+# You can perform a PCA to see if there's a good separation between Ctrl's & KD's
 
 pca <- as.data.frame(prcomp(t(na.omit(counts(des, normalized=TRUE))))$x) 
 col <- 1:5 
@@ -246,17 +259,45 @@ plot(expr_mtx$meanVoomExprCtrl,log2(expr_mtx$meanDeseqExprCtrl),xlim=c(2,16),yli
 #
 # ****************************************************************************
 
-# calculs NSD (sur rpkm/log/? => rpm par Pascal)
 #
 rpmCnt_cSel_mtx=apply(rawCnt_cSel_mtx,2,function(x) x/sum(x)*1E6)
 rmpCntNA_cSel_mtx=replace(rpmCnt_cSel_mtx,which(rpmCnt_cSel_mtx==0),NA)
 #
-nsd_mtx$nsdRpmCtrl=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
-nsd_mtx$nsdRpmMes4KD=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleMes4KD_slct],na.rm=TRUE)/mean(x[sampleMes4KD_slct],na.rm=TRUE))
-nsd_mtx$deltaNsdRpm=nsd_mtx$nsdRpmMes4KD - nsd_mtx$nsdRpmCtrl
+var_mtx$nsdRpm=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x,na.rm=TRUE)/mean(x,na.rm=TRUE))
+var_mtx$nsdRpmCtrl=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
+var_mtx$nsdRpmMes4KD=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleMes4KD_slct],na.rm=TRUE)/mean(x[sampleMes4KD_slct],na.rm=TRUE))
+var_mtx$deltaNsdRpm=var_mtx$nsdRpmMes4KD - var_mtx$nsdRpmCtrl
 #
-nsd_mtx$nsdVoomCtrl=apply(voomCnts_mtx,1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
-nsd_mtx$nsdVoomMes4KD=apply(voomCnts_mtx,1,function(x) sd(x[sampleMes4KD_slct],na.rm=TRUE)/mean(x[sampleMes4KD_slct],na.rm=TRUE))
-nsd_mtx$deltaNsdVoom=nsd_mtx$nsdVoomMes4KD - nsd_mtx$nsdVoomCtrl
+var_mtx$nsdVoomCtrl=apply(voomCnts_mtx,1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
+var_mtx$nsdVoomMes4KD=apply(voomCnts_mtx,1,function(x) sd(x[sampleMes4KD_slct],na.rm=TRUE)/mean(x[sampleMes4KD_slct],na.rm=TRUE))
+var_mtx$deltaNsdVoom=var_mtx$nsdVoomMes4KD - var_mtx$nsdVoomCtrl
+#
+var_mtx=cbind(var_mtx[,6:12],var_mtx[,1:5]) # abominablement moche !!!
+#
+```
+
+
+```{r} 
+#
+# ***** warning: *****
+#
+# expr_mtx & var_mtx are df !!!
+#
+# delete unrequired objects
+rm(DE_ebayes_sum,DE_ebayes_sorted_sum,DE_treat_sum,DE_treat_sorted_sum)
+rm(design_mtx,voomCnts_mtx,voom_res,voomNorm_res,voomNorm_lmfit)
+rm(dds,dds_esf,DE_ebayes,DE_treat,des,deseq_res,dge_l,dgeNorm_l,rLogDds)
+rm(fTest_voom_ll,shapTestCtrl,shapTestMes4KD)
+rm(pca,col,groups)
+#
+# finally, save objects that have to be saved
+#
+# save.image(file=paste(wDir,"exp/3_RNAseq_analysis/data/sc_DE_DV_analysisResults.RData",sep="/"))
+fileName="sc_DE_DV_analysisResults.RData"
+filePath=paste(wDir,"exp/3_RNAseq_analysis/data",sep="/")
+save.image(file=paste(filePath,fileName,sep="/"))
+rm(filePath,fileName)
+
+
 ```
 
