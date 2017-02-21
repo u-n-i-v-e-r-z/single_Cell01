@@ -1,0 +1,353 @@
+---
+title: "RNAseq Single Cell - Impact of dMes4 on gene regulation: Differential variability analysis"
+author: "Schaak, Heurteau"
+date: "February 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+########################################################################################
+<!--     ### LIBRARY LOADING / SET WORKING DIRECTORY / LOAD FILES -->
+########################################################################################
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(GenomicAlignments)
+library(stringr)
+library("limma")
+library("edgeR")
+library("DESeq2")
+library(dplyr)
+```
+
+<!-- Set working directory (path to git clone on local computer) -->
+```{r, echo=FALSE}
+rm(list=ls())
+cat("\014") # to clear console
+# wDir <- "/media/alexandre/Data/Recherche/LBME/Projects/sCell_RNAseq_clone"
+wDir <- c("/media/alexandre/Data/Recherche/LBME/Projects/sCell_RNAseq_clone","/home/stef/Documents/New_Labo_Janv2017/singleCellRNAseq01")
+wDir <- ifelse(dir.exists(wDir[1]),wDir[1],ifelse(dir.exists(wDir[2]),wDir[2],"error_selecting_wDir"))
+setwd(wDir)
+
+```
+
+
+<!-- Load sample infos and count matrix ; select samples (and create filters for selected cells) -->
+```{r echo=FALSE}
+
+# # moche mais à faire une première fois :
+# file.copy(from="/home/stef/Documents/New_Labo_Janv2017/singleCellRNAseq01_janv2017/singleCellNew/data/R_Objects/ddSovl613_OK.rds",to="/home/stef/Documents/New_Labo_Janv2017/singleCellRNAseq01/exp/3_RNAseq_analysis/data/mcDavid_Sovl613.rds")
+# file.copy(from="/home/stef/Documents/New_Labo_Janv2017/singleCellRNAseq01_janv2017/singleCellNew/data/R_Objects/sampleTableRNAseqDavid.rds",to="/home/stef/Documents/New_Labo_Janv2017/singleCellRNAseq01/exp/3_RNAseq_analysis/data/mcDavid_sampleTable.rds")
+# 
+# file.copy(from="/home/stef/Documents/New_Labo_Janv2017/singleCellRNAseq01_janv2017/singleCellNew/R_Objects/mcRNAseq2016/scSovl613.rds",to="/home/stef/Documents/New_Labo_Janv2017/singleCellRNAseq01/exp/3_RNAseq_analysis/data/mc2016_Sovl613.rds")
+# file.copy(from="/home/stef/Documents/New_Labo_Janv2017/singleCellRNAseq01_janv2017/singleCellNew/R_Objects/mcRNAseq2016/sampleTable.rds",to="/home/stef/Documents/New_Labo_Janv2017/singleCellRNAseq01/exp/3_RNAseq_analysis/data/mc2016_sampleTable.rds")
+
+# mcDavid_sumexp=readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/mcDavid_Sovl613.rds",sep="/"))
+# mcDavid_sampleTable=readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/mcDavid_sampleTable.rds",sep="/"))
+# 
+# mc2016_sumexp=readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/mc2016_Sovl613.rds",sep="/"))
+# mc2016_sampleTable=readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/mc2016_sampleTable.rds",sep="/"))
+# 
+# mcDavid_sampleTable$condition=rep(c("Ctrl","Mes4KD"),times=1,each=2)
+# mcDavid_sampleTable$color=ifelse(mcDavid_sampleTable$condition=="Ctrl","green4",ifelse(mcDavid_sampleTable$condition=="Mes4KD","red",NA))
+# rownames(mcDavid_sampleTable)=mcDavid_sampleTable$sampleName
+# colData(mcDavid_sumexp)=DataFrame(mcDavid_sampleTable)
+# 
+# mc2016_sampleTable$condition=c("Ctrl","Mes4KD")
+# mc2016_sampleTable$color=ifelse(mc2016_sampleTable$condition=="Ctrl","green4",ifelse(mc2016_sampleTable$condition=="Mes4KD","red",NA))
+# rownames(mc2016_sampleTable)=mc2016_sampleTable$sampleName
+# colData(mc2016_sumexp)=DataFrame(mc2016_sampleTable)
+# 
+# # View(colData(mcDavid_sumexp))
+# # View(colData(mc2016_sumexp))
+# # View(colData(sc613_sumexp))
+# 
+# saveRDS(mcDavid_sumexp,file=paste(wDir,"exp/3_RNAseq_analysis/data/mcDavid_Sovl613_OK.rds",sep="/"))
+# saveRDS(mcDavid_sampleTable,file=paste(wDir,"exp/3_RNAseq_analysis/data/mcDavid_sampleTable_OK.rds",sep="/"))
+# 
+# saveRDS(mc2016_sumexp,file=paste(wDir,"exp/3_RNAseq_analysis/data/mc2016_Sovl613_OK.rds",sep="/"))
+# saveRDS(mc2016_sampleTable,file=paste(wDir,"exp/3_RNAseq_analysis/data/mc2016_sampleTable_OK.rds",sep="/"))
+
+mcDavid_sumexp=readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/mcDavid_Sovl613_OK.rds",sep="/"))
+mcDavid_sampleTable=readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/mcDavid_sampleTable_OK.rds",sep="/"))
+
+mc2016_sumexp=readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/mc2016_Sovl613_OK.rds",sep="/"))
+mc2016_sampleTable=readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/mc2016_sampleTable_OK.rds",sep="/"))
+
+sampleInfo_df <- rbind(mcDavid_sampleTable,mc2016_sampleTable)
+rawCnt_mtx <- cbind(assay(mcDavid_sumexp),assay(mc2016_sumexp))
+
+mcAll_sumexp=cbind(mcDavid_sumexp,mc2016_sumexp)
+(colData(mcAll_sumexp))
+
+```
+
+
+########################################################################################
+##           PLOT RAW DATA BEFORE SELECTING
+########################################################################################
+
+```{r}
+
+# readsTot ~ expressedGenes
+barplot(colSums(rawCnt_mtx),ylab="Reads sum",col=as.character(sampleInfo_df$color),las=2)
+plot(colSums(rawCnt_mtx),colSums(rawCnt_mtx>0),col=as.character(sampleInfo_df$color),pch=16,xlab="Reads sum",ylab="#Expressed genes (>1 read)")
+# legend(1, 4000, legend=c("Ctrl", "Mes4KD"),
+#        col=c("green4", "red"), bg="white",pch=16, cex=0.8)
+
+```
+
+<!-- Select cells -->
+```{r echo=F}
+
+cellSelection <- which(str_detect(sampleInfo_df$sampleName,"_1_")) # pour samples 1-4
+# cellSelection <- which(str_detect(sampleInfo_df$sampleName,"-")) # pour samples 5-6
+names(cellSelection)=rownames(sampleInfo_df)[cellSelection]
+rawCnt_mtx %>% subset(select=cellSelection) -> rawCnt_cSel_mtx
+# sampleInfo_df %>% add_rownames() -> sampleInfo_df
+
+# sampleInfo_df %>% filter(sampleName %in% names(cellSelection)) -> sInfo_cSel_df # perd les noms de lignes !!!
+sInfo_cSel_df=sampleInfo_df[sampleInfo_df$sampleName %in% names(cellSelection),] # conserve les noms de lignes !!!
+
+sInfo_cSel_df %>% filter(condition=="Ctrl") -> sInfoCtrl_cSel_df
+sInfo_cSel_df %>% filter(condition=="Mes4KD") -> sInfoMes4KD_cSel_df
+# Create Masks and Selects for further analysis
+sampleCtrl_msk <- sInfo_cSel_df$condition=="Ctrl"
+sampleMes4KD_msk <- sInfo_cSel_df$condition=="Mes4KD"
+sampleCtrl_slct <- which(sInfo_cSel_df$condition=="Ctrl")
+sampleMes4KD_slct <- which(sInfo_cSel_df$condition=="Mes4KD")
+
+```
+ 
+
+ 
+ 
+ 
+########################################################################################
+##                      RENOMMER VARIABLE ET FAIRE PLOT DESCRIPTIF
+########################################################################################
+
+<!-- Select genes expressed in at least 1 control & 1 Mes4 KD  -->
+```{r echo=F}
+length(which((rowSums(rawCnt_mtx[,cellSelection]>0)>0) == T))
+# 11049
+length(which((rowSums(rawCnt_cSel_mtx[,sampleCtrl_slct]>0)>=2 | rowSums(rawCnt_cSel_mtx[,sampleMes4KD_slct]>0)>=2) == T))
+# 10776
+length(which((rowSums(rawCnt_cSel_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_cSel_mtx[,sampleMes4KD_slct]>0)>=2) == T))
+# 9674
+length(which((rowSums(rawCnt_cSel_mtx[,sampleCtrl_slct]>0)>=1 | rowSums(rawCnt_cSel_mtx[,sampleMes4KD_slct]>0)>=1) == T))
+# 11049
+length(which((rowSums(rawCnt_cSel_mtx[,sampleCtrl_slct]>0)>=1 & rowSums(rawCnt_cSel_mtx[,sampleMes4KD_slct]>0)>=1) == T))
+# 9905
+geneFilter_msk <- rowSums(rawCnt_cSel_mtx[,sampleCtrl_slct]>0)>=1 & rowSums(rawCnt_cSel_mtx[,sampleMes4KD_slct]>0)>=1
+geneNames_vec <- rownames(rawCnt_cSel_mtx)[geneFilter_msk]
+
+```
+
+
+
+
+########################################################################################
+##                      LIMMA DIFFERENTIAL EXPRESSION ANALYSIS
+########################################################################################
+
+```{r echo=F}
+
+# Create a DGE List object 
+dge_l=DGEList(counts=subset(rawCnt_cSel_mtx,subset=geneFilter_msk,select=TRUE))
+# Normalize it
+dgeNorm_l=calcNormFactors(dge_l)
+# Add a design matrix (identify samples type -> Ctrl/Mes4KD)
+design_mtx=model.matrix(~sInfo_cSel_df$condition)
+# Launch VOOM transform + Plot Mean-Variance 
+voom_res=voom(dge_l,design=design_mtx,plot=TRUE)
+voomNorm_res=voom(dgeNorm_l,design=design_mtx,plot=TRUE)
+# Fit a linear regression so each gene read counts will be normally distributed
+voomNorm_lmfit=lmFit(voomNorm_res,design_mtx)
+
+```
+
+
+
+```{r}
+
+#Then try different fittin method to assess the differential expression between these two conditions
+# First: eBayes
+DE_ebayes=eBayes(voomNorm_lmfit)
+DE_ebayes_sum=topTable(DE_ebayes,coef=ncol(design_mtx),number=dim(DE_ebayes)[1])
+#
+# Second : Treat
+DE_treat=treat(DE_ebayes,lfc=log2(1.2))
+DE_treat_sum=topTreat(DE_treat,coef=ncol(design_mtx),number=dim(DE_treat)[1])
+# Plot MDS to see how well experiment clulster by variance
+plotMDS(voomNorm_res,col=as.character(sInfo_cSel_df$color),main="MDS plot")
+
+```
+
+
+
+########################################################################################
+##                      DESEQ DIFFERENTIAL EXPRESSION ANALYSIS
+########################################################################################
+```{r}
+#Create a DESeq data set structure to do the DE analysis
+dds=DESeqDataSet(
+  subset(
+    mcAll_sumexp,subset=elementMetadata(rowRanges(mcAll_sumexp))@listData$gene_id%in%geneNames_vec,
+    select=rownames(colData(mcAll_sumexp))%in%(rownames(sInfo_cSel_df))),
+  design=~condition)
+#
+# WARNING : some variables in design formula are characters, converting to factors> #
+#
+head(assay(dds))
+colData(dds)
+# Apply the DESeq DE algorithm
+des=DESeq(dds)
+# 
+dds_esf=estimateSizeFactors(dds)
+#
+rLogDds=rlog(dds,blind=FALSE)
+#
+head(assay(rLogDds))
+#
+#
+(deseq_res=results(des))
+#
+mcols(deseq_res,use.names=TRUE)
+```
+
+########################################################################################
+##                      COMPARISON Rpm, VOOM & DESeq
+########################################################################################
+```{r}
+
+#
+rpmCnt_cSel_mtx=apply(rawCnt_cSel_mtx,2,function(x) x/sum(x)*1E6)
+rmpCntNA_cSel_mtx=replace(rpmCnt_cSel_mtx,which(rpmCnt_cSel_mtx==0),NA)
+#
+
+voomCnts_mtx=voomNorm_res$E[order(rownames(voomNorm_res$E),decreasing=FALSE),]
+DE_ebayes_sorted_sum=DE_ebayes_sum[order(rownames(DE_ebayes_sum),decreasing=FALSE),]
+DE_treat_sorted_sum=DE_treat_sum[order(rownames(DE_treat_sum),decreasing=FALSE),]
+#
+if (identical(rownames(voomCnts_mtx),rownames(DE_ebayes_sorted_sum)) & identical(rownames(voomCnts_mtx),rownames(DE_treat_sorted_sum))) {
+  expr_mtx=data.frame(row.names=rownames(rawCnt_cSel_mtx)[geneFilter_msk])
+  var_mtx=data.frame(row.names=rownames(rawCnt_cSel_mtx)[geneFilter_msk])
+  # nsd_mtx=data.frame(row.names=rownames(rawCnt_cSel_mtx)[geneFilter_msk])
+}
+
+#
+expr_mtx$meanRpmExpr=apply(rmpCntNA_cSel_mtx[geneFilter_msk,],1,mean,na.rm=TRUE)
+expr_mtx$meanRpmExprCtrl=apply(rmpCntNA_cSel_mtx[geneFilter_msk,sampleCtrl_slct],1,mean,na.rm=TRUE)
+expr_mtx$meanRpmExprMes4KD=apply(rmpCntNA_cSel_mtx[geneFilter_msk,sampleMes4KD_slct],1,mean,na.rm=TRUE)
+#
+
+# Now let's summarize voom analysis on DE genes for each group (control vs mes4KD)
+expr_mtx$meanVoomExpr=apply(voomCnts_mtx,1,mean)
+expr_mtx$meanVoomExprCtrl=apply(voomCnts_mtx,1,function(x) mean(x[sampleCtrl_slct]))
+expr_mtx$meanVoomExprMes4KD=apply(voomCnts_mtx,1,function(x) mean(x[sampleMes4KD_slct]))
+expr_mtx$voomLogFC=DE_ebayes_sorted_sum$logFC
+expr_mtx$voomPval=DE_ebayes_sorted_sum$P.Value
+# And for the analysis of variance
+var_mtx$varVoomExpr=apply(voomCnts_mtx,1,var)
+var_mtx$varVoomExprCtrl=apply(voomCnts_mtx,1,function(x) var(x[sampleCtrl_slct]))
+var_mtx$varVoomExprMes4KD=apply(voomCnts_mtx,1,function(x) var(x[sampleMes4KD_slct]))
+fTest_voom_ll=apply(voomCnts_mtx,1,function(x) var.test(x[sampleCtrl_slct],x[sampleMes4KD_slct]))
+var_mtx$varFval=sapply(fTest_voom_ll,function(x) x$statistic)
+var_mtx$varPval=sapply(fTest_voom_ll,function(x) x$p.value)
+
+```
+
+```{r}
+# Now let's summarize DEseq analysis on DE genes for each group (control vs mes4KD)
+if (identical(rownames(expr_mtx),rownames(deseq_res))) {
+  expr_mtx$meanDeseqExpr=deseq_res$baseMean
+  expr_mtx$meanDeseqExprCtrl=apply(counts(des,normalized=TRUE)[,sampleCtrl_slct],1,mean)
+  expr_mtx$meanDeseqExprMes4KD=apply(counts(des,normalized=TRUE)[,sampleMes4KD_slct],1,mean)
+  expr_mtx$deseqLogFC=deseq_res$log2FoldChange
+  expr_mtx$deseqPval=deseq_res$pvalue
+}
+
+# You can perform a PCA to see if there's a good separation between Ctrl's & KD's
+
+pca <- as.data.frame(prcomp(t(na.omit(counts(des, normalized=TRUE))))$x) 
+col <- 1:5 
+groups <- colData(dds)$condition 
+plot(PC2~PC1, data=pca, bg=col[groups], pch=21, main="DESeq2")
+text(pca$PC1,pca$PC2,label=colData(des)$condition,pos=1)
+
+pca <- as.data.frame(prcomp(t(na.omit(voomNorm_res$E)))$x) 
+plot(PC2~PC1, data=pca, bg=col[groups], pch=21, main="voom")
+text(pca$PC1,pca$PC2,label=colData(dds)$condition,pos=1)
+```
+
+
+
+<!-- TEST NORMALITY OF THE VOOM TRANSFORMED DATA SET -->
+```{r} 
+# shapTest_df=data.frame(row.names=rownames(voomCnts_mtx))
+# #
+# # -> faire test normalite sur donées avant et après voom-transformation
+# #
+# shapTestCtrl=apply(voomCnts_mtx[,sampleCtrl_slct],1,shapiro.test)
+# # WARNING : Error in FUN(newX[, i], ...) : sample size must be between 3 and 5000
+# shapTestMes4KD=apply(voomCnts_mtx[,sampleMes4KD_slct],1,shapiro.test)
+# #
+# shapTest_df$vommCtrl=sapply(shapTestCtrl,function(x) x$p.value)
+# shapTest_df$vommMes4KD=sapply(shapTestMes4KD,function(x) x$p.value)
+# #
+# table(apply(shapTest_df,1,min)<0.1)
+# # FALSE  TRUE 
+# # 2192   950 
+#
+plot(expr_mtx$meanVoomExprCtrl,log2(expr_mtx$meanDeseqExprCtrl),pch=16,col="green4",cex=0.5)
+# ****************************************************************************
+#
+# var test on voom-trasnformed data & nsd calculation
+#
+# ****************************************************************************
+
+#
+rpmCnt_cSel_mtx=apply(rawCnt_cSel_mtx,2,function(x) x/sum(x)*1E6)
+rmpCntNA_cSel_mtx=replace(rpmCnt_cSel_mtx,which(rpmCnt_cSel_mtx==0),NA)
+#
+var_mtx$nsdRpm=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x,na.rm=TRUE)/mean(x,na.rm=TRUE))
+var_mtx$nsdRpmCtrl=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
+var_mtx$nsdRpmMes4KD=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleMes4KD_slct],na.rm=TRUE)/mean(x[sampleMes4KD_slct],na.rm=TRUE))
+var_mtx$deltaNsdRpm=var_mtx$nsdRpmMes4KD - var_mtx$nsdRpmCtrl
+#
+var_mtx$nsdVoomCtrl=apply(voomCnts_mtx,1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
+var_mtx$nsdVoomMes4KD=apply(voomCnts_mtx,1,function(x) sd(x[sampleMes4KD_slct],na.rm=TRUE)/mean(x[sampleMes4KD_slct],na.rm=TRUE))
+var_mtx$deltaNsdVoom=var_mtx$nsdVoomMes4KD - var_mtx$nsdVoomCtrl
+#
+var_mtx=cbind(var_mtx[,6:12],var_mtx[,1:5]) # abominablement moche !!!
+#
+```
+
+
+```{r} 
+#
+# ***** warning: *****
+#
+# expr_mtx & var_mtx are df !!!
+#
+# delete unrequired objects
+rm(DE_ebayes_sum,DE_ebayes_sorted_sum,DE_treat_sum,DE_treat_sorted_sum)
+rm(design_mtx,voomCnts_mtx,voom_res,voomNorm_res,voomNorm_lmfit)
+rm(dds,dds_esf,DE_ebayes,DE_treat,des,deseq_res,dge_l,dgeNorm_l,rLogDds)
+rm(fTest_voom_ll) # ,shapTestCtrl,shapTestMes4KD)
+rm(pca,col,groups)
+#
+# finally, save objects that have to be saved
+#
+# save.image(file=paste(wDir,"exp/3_RNAseq_analysis/data/mc_DE_analysisResults.RData",sep="/"))
+fileName="mc_DE_analysisResults.RData"
+filePath=paste(wDir,"exp/3_RNAseq_analysis/data",sep="/")
+save.image(file=paste(filePath,fileName,sep="/"))
+rm(filePath,fileName)
+
+
+```
+
