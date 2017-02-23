@@ -41,7 +41,9 @@ sampleInfo_df <- readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/sampleTable
 sc613_sumexp <- readRDS(file=paste(wDir,"exp/3_RNAseq_analysis/data/scSovl613.rds",sep="/"))
 rawCnt_mtx <- assay(sc613_sumexp)
 
-
+# to ensure var type:
+sampleInfo_df$condition=as.factor(sampleInfo_df$condition)
+sampleInfo_df$color=as.character(sampleInfo_df$color)
 
 ```
 
@@ -67,11 +69,16 @@ legend(1, 4000, legend=c("Ctrl", "Mes4KD"),
 ```{r echo=F}
 
 cellSelection <- which(colSums(rawCnt_mtx)>2.5E4)
+# names(cellSelection)=rownames(sampleInfo_df)[cellSelection]
 rawCnt_mtx %>% subset(select=cellSelection) -> rawCnt_cSel_mtx
-sampleInfo_df %>% add_rownames() -> sampleInfo_df
-sampleInfo_df %>% filter(rowname %in% names(cellSelection)) -> sInfo_cSel_df
-sInfo_cSel_df %>% filter(condition=="Ctrl") -> sInfoCtrl_cSel_df
-sInfo_cSel_df %>% filter(condition=="Mes4KD") -> sInfoMes4KD_cSel_df
+# sampleInfo_df %>% add_rownames() -> sampleInfo_df
+# sampleInfo_df %>% filter(rowname %in% names(cellSelection)) -> sInfo_cSel_df
+
+# sampleInfo_df %>% filter(sampleName %in% names(cellSelection)) -> sInfo_cSel_df # perd les noms de lignes !!!
+sInfo_cSel_df=sampleInfo_df[rownames(sampleInfo_df) %in% names(cellSelection),] # conserve les noms de lignes !!!
+
+# sInfo_cSel_df %>% filter(condition=="Ctrl") -> sInfoCtrl_cSel_df
+# sInfo_cSel_df %>% filter(condition=="Mes4KD") -> sInfoMes4KD_cSel_df
 # Create Masks and Selects for further analysis
 sampleCtrl_msk <- sInfo_cSel_df$condition=="Ctrl"
 sampleMes4KD_msk <- sInfo_cSel_df$condition=="Mes4KD"
@@ -96,7 +103,7 @@ sampleMes4KD_slct <- which(sInfo_cSel_df$condition=="Mes4KD")
 # length(which((rowSums(rawCnt_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_mtx[,sampleMes4KD_slct]>0)>=2) == T))
 # 3142
 geneFilter_msk <- rowSums(rawCnt_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_mtx[,sampleMes4KD_slct]>0)>=2
-geneNmes_vec <- rownames(rawCnt_cSel_mtx)[geneFilter_msk]
+geneNames_vec <- rownames(rawCnt_cSel_mtx)[geneFilter_msk]
 ```
 
 
@@ -148,8 +155,8 @@ plotMDS(voomNorm_res,col=as.character(sInfo_cSel_df$color),main="MDS plot")
 #Create a DESeq data set structure to do the DE analysis
 dds=DESeqDataSet(
   subset(
-    sc613_sumexp,subset=elementMetadata(rowRanges(sc613_sumexp))@listData$gene_id%in%geneNmes_vec,
-    select=rownames(colData(sc613_sumexp))%in%(sInfo_cSel_df$rowname)),
+    sc613_sumexp,subset=elementMetadata(rowRanges(sc613_sumexp))@listData$gene_id%in%geneNames_vec,
+    select=rownames(colData(sc613_sumexp))%in%(rownames(sInfo_cSel_df))),
   design=~condition)
 #
 head(assay(dds))
@@ -176,7 +183,7 @@ mcols(deseq_res,use.names=TRUE)
 
 #
 rpmCnt_cSel_mtx=apply(rawCnt_cSel_mtx,2,function(x) x/sum(x)*1E6)
-rmpCntNA_cSel_mtx=replace(rpmCnt_cSel_mtx,which(rpmCnt_cSel_mtx==0),NA)
+rpmCntNA_cSel_mtx=replace(rpmCnt_cSel_mtx,which(rpmCnt_cSel_mtx==0),NA)
 #
 
 voomCnts_mtx=voomNorm_res$E[order(rownames(voomNorm_res$E),decreasing=FALSE),]
@@ -190,9 +197,9 @@ if (identical(rownames(voomCnts_mtx),rownames(DE_ebayes_sorted_sum)) & identical
 }
 
 #
-expr_mtx$meanRpmExpr=apply(rmpCntNA_cSel_mtx[geneFilter_msk,],1,mean,na.rm=TRUE)
-expr_mtx$meanRpmExprCtrl=apply(rmpCntNA_cSel_mtx[geneFilter_msk,sampleCtrl_slct],1,mean,na.rm=TRUE)
-expr_mtx$meanRpmExprMes4KD=apply(rmpCntNA_cSel_mtx[geneFilter_msk,sampleMes4KD_slct],1,mean,na.rm=TRUE)
+expr_mtx$meanRpmExpr=apply(rpmCntNA_cSel_mtx[geneFilter_msk,],1,mean,na.rm=TRUE)
+expr_mtx$meanRpmExprCtrl=apply(rpmCntNA_cSel_mtx[geneFilter_msk,sampleCtrl_slct],1,mean,na.rm=TRUE)
+expr_mtx$meanRpmExprMes4KD=apply(rpmCntNA_cSel_mtx[geneFilter_msk,sampleMes4KD_slct],1,mean,na.rm=TRUE)
 #
 
 # Now let's summarize voom analysis on DE genes for each group (control vs mes4KD)
@@ -261,11 +268,11 @@ plot(expr_mtx$meanVoomExprCtrl,log2(expr_mtx$meanDeseqExprCtrl),xlim=c(2,16),yli
 
 #
 rpmCnt_cSel_mtx=apply(rawCnt_cSel_mtx,2,function(x) x/sum(x)*1E6)
-rmpCntNA_cSel_mtx=replace(rpmCnt_cSel_mtx,which(rpmCnt_cSel_mtx==0),NA)
+rpmCntNA_cSel_mtx=replace(rpmCnt_cSel_mtx,which(rpmCnt_cSel_mtx==0),NA)
 #
-var_mtx$nsdRpm=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x,na.rm=TRUE)/mean(x,na.rm=TRUE))
-var_mtx$nsdRpmCtrl=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
-var_mtx$nsdRpmMes4KD=apply(subset(rmpCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleMes4KD_slct],na.rm=TRUE)/mean(x[sampleMes4KD_slct],na.rm=TRUE))
+var_mtx$nsdRpm=apply(subset(rpmCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x,na.rm=TRUE)/mean(x,na.rm=TRUE))
+var_mtx$nsdRpmCtrl=apply(subset(rpmCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
+var_mtx$nsdRpmMes4KD=apply(subset(rpmCntNA_cSel_mtx,subset=geneFilter_msk,select=TRUE),1,function(x) sd(x[sampleMes4KD_slct],na.rm=TRUE)/mean(x[sampleMes4KD_slct],na.rm=TRUE))
 var_mtx$deltaNsdRpm=var_mtx$nsdRpmMes4KD - var_mtx$nsdRpmCtrl
 #
 var_mtx$nsdVoomCtrl=apply(voomCnts_mtx,1,function(x) sd(x[sampleCtrl_slct],na.rm=TRUE)/mean(x[sampleCtrl_slct],na.rm=TRUE))
@@ -287,17 +294,34 @@ var_mtx=cbind(var_mtx[,6:12],var_mtx[,1:5]) # abominablement moche !!!
 rm(DE_ebayes_sum,DE_ebayes_sorted_sum,DE_treat_sum,DE_treat_sorted_sum)
 rm(design_mtx,voomCnts_mtx,voom_res,voomNorm_res,voomNorm_lmfit)
 rm(dds,dds_esf,DE_ebayes,DE_treat,des,deseq_res,dge_l,dgeNorm_l,rLogDds)
-rm(fTest_voom_ll,shapTestCtrl,shapTestMes4KD)
+rm(fTest_voom_ll,shapTest_df,shapTestCtrl,shapTestMes4KD)
 rm(pca,col,groups)
 #
+
+rm(rawCnt_mtx,rawCnt_cSel_mtx,rpmCnt_cSel_mtx,sampleInfo_df)
+rm(cellSelection,sc613_sumexp)
+
 # finally, save objects that have to be saved
 #
-# save.image(file=paste(wDir,"exp/3_RNAseq_analysis/data/sc_DE_DV_analysisResults.RData",sep="/"))
-fileName="sc_DE_DV_analysisResults.RData"
-filePath=paste(wDir,"exp/3_RNAseq_analysis/data",sep="/")
-save.image(file=paste(filePath,fileName,sep="/"))
-rm(filePath,fileName)
-
+fileName="sc_DE_DV_analysisResults.rds"
+subDir="exp/3_RNAseq_analysis/data"
+#
+saveRDS(
+  list(
+    rpmCntNA_cSel_mtx=rpmCntNA_cSel_mtx,
+    expr_mtx=expr_mtx,
+    var_mtx=var_mtx,
+    sInfo_cSel_df=sInfo_cSel_df,
+    geneFilter_msk=geneFilter_msk,
+    geneNames_vec=geneNames_vec,
+    sampleCtrl_msk=sampleCtrl_msk,
+    sampleCtrl_slct=sampleCtrl_slct,
+    sampleMes4KD_msk=sampleMes4KD_msk,
+    sampleMes4KD_slct=sampleMes4KD_slct
+  ),
+  file=paste(wDir,subDir,fileName,sep="/")
+)
+rm(fileName,subDir)
 
 ```
 
