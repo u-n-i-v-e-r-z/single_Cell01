@@ -212,7 +212,8 @@ expr_mtx$voomPval=DE_ebayes_sorted_sum$P.Value
 var_mtx$varVoomExpr=apply(voomCnts_mtx,1,var)
 var_mtx$varVoomExprCtrl=apply(voomCnts_mtx,1,function(x) var(x[sampleCtrl_slct]))
 var_mtx$varVoomExprMes4KD=apply(voomCnts_mtx,1,function(x) var(x[sampleMes4KD_slct]))
-fTest_voom_ll=apply(voomCnts_mtx,1,function(x) var.test(x[sampleCtrl_slct],x[sampleMes4KD_slct]))
+# fTest_voom_ll=apply(voomCnts_mtx,1,function(x) var.test(x[sampleCtrl_slct],x[sampleMes4KD_slct]))
+fTest_voom_ll=apply(voomCnts_mtx,1,function(x) var.test(x[sampleMes4KD_slct],x[sampleCtrl_slct])) # Ctrl en 2 pour ratio Fval=Mes4KD/Ctrl
 var_mtx$varFval=sapply(fTest_voom_ll,function(x) x$statistic)
 var_mtx$varPval=sapply(fTest_voom_ll,function(x) x$p.value)
 
