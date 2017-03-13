@@ -98,12 +98,85 @@ sampleMes4KD_slct <- which(sInfo_cSel_df$condition=="Mes4KD")
 ```{r echo=F}
 # length(which((rowSums(rawCnt_mtx[,cellSelection]>0)>0) == T))
 # 6990
-# length(which((rowSums(rawCnt_mtx[,sampleCtrl_slct]>0)>=2 | rowSums(rawCnt_mtx[,sampleMes4KD_slct]>0)>=2) == T))
-# 4784
-# length(which((rowSums(rawCnt_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_mtx[,sampleMes4KD_slct]>0)>=2) == T))
+# length(which((rowSums(rawCnt_mtx[,cellSelection]>0)>1) == T))
+#] 5872
+# length(which((rowSums(rawCnt_cSel_mtx[,sampleCtrl_slct]>0)>=2 | rowSums(rawCnt_cSel_mtx[,sampleMes4KD_slct]>0)>=2) == T))
+# 5509
+# length(which((rowSums(rawCnt_cSel_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_cSel_mtx[,sampleMes4KD_slct]>0)>=2) == T))
 # 3142
-geneFilter_msk <- rowSums(rawCnt_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_mtx[,sampleMes4KD_slct]>0)>=2
+# length(which((rowSums(rawCnt_mtx[,cellSelection]>0)==11)))
+# 545
+
+geneSelection_l=list()
+
+geneSelection_l$geneFilter_1orMore_6990_msk <- rowSums(rawCnt_mtx[,cellSelection]>0)>=1
+geneSelection_l$geneFilter_1orMore_6990_vec <- rownames(rawCnt_cSel_mtx)[geneSelection_l$geneFilter_1orMore_6990_msk]
+
+geneSelection_l$geneFilter_2orMore_5872_msk <- rowSums(rawCnt_mtx[,cellSelection]>0)>=2
+geneSelection_l$geneFilter_2orMore_5872_vec <- rownames(rawCnt_cSel_mtx)[geneSelection_l$geneFilter_2orMore_5872_msk]
+
+geneSelection_l$geneFilter_2or2_5509_msk <- rowSums(rawCnt_cSel_mtx[,sampleCtrl_slct]>0)>=2 | rowSums(rawCnt_cSel_mtx[,sampleMes4KD_slct]>0)>=2
+geneSelection_l$geneFilter_2or2_5509_vec <- rownames(rawCnt_cSel_mtx)[geneSelection_l$geneFilter_2or2_5509_msk]
+
+geneSelection_l$geneFilter_2and2_2829_msk <- rowSums(rawCnt_cSel_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_cSel_mtx[,sampleMes4KD_slct]>0)>=2
+geneSelection_l$geneFilter_2and2_2829_vec <- rownames(rawCnt_cSel_mtx)[geneSelection_l$geneFilter_2and2_2829_msk]
+
+geneSelection_l$geneFilter_7and4_545_msk <- rowSums(rawCnt_mtx[,cellSelection]>0)==11
+geneSelection_l$geneFilter_7and4_545_vec <- rownames(rawCnt_cSel_mtx)[geneSelection_l$geneFilter_7and4_545_msk]
+
+# geneFilter_msk <- rowSums(rawCnt_mtx[,sampleCtrl_slct]>0)>=2 & rowSums(rawCnt_mtx[,sampleMes4KD_slct]>0)>=2
+# geneNames_vec <- rownames(rawCnt_cSel_mtx)[geneFilter_msk]
+
+#
+fileName="geneSelection_l.rds"
+subDir="exp/3_RNAseq_analysis/data"
+#
+saveRDS(geneSelection_l,file=paste(wDir,subDir,fileName,sep="/"))
+rm(fileName,subDir)
+
+
+geneFilter_msk <- geneSelection_l$geneFilter_7and4_545_msk
 geneNames_vec <- rownames(rawCnt_cSel_mtx)[geneFilter_msk]
+
+
+# subDir="exp/3_RNAseq_analysis/data"
+subDir="data"
+fileName="quartilesAdelman.rds"
+quartilesAdelman=readRDS(file=paste(wDir,subDir,fileName,sep="/"))
+#
+# quartilesAdelman=lapply(quartilesAdelman,function(x) str_c(x,".1"))
+rm(fileName,subDir)
+
+
+activeGenes=unlist(quartilesAdelman)
+
+selTemp=geneSelection_l$geneFilter_1orMore_6990_vec
+cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%")
+# 4504 active genes 
+# 64.43 %
+
+selTemp=geneSelection_l$geneFilter_2orMore_5872_vec
+cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%")
+# 4096 active genes 
+# 69.75 %
+
+selTemp=geneSelection_l$geneFilter_2or2_5509_vec
+cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%")
+# 3888 active genes 
+# 70.58 %
+
+selTemp=geneSelection_l$geneFilter_2and2_2829_vec
+cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%")
+# 2097 active genes 
+# 74.13 %
+
+selTemp=geneSelection_l$geneFilter_7and4_545_vec
+cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%")
+# 399 active genes 
+# 73.21 %
+
+
+
 ```
 
 
