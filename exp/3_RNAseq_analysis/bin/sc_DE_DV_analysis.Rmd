@@ -135,9 +135,17 @@ saveRDS(geneSelection_l,file=paste(wDir,subDir,fileName,sep="/"))
 rm(fileName,subDir)
 
 
-geneFilter_msk <- geneSelection_l$geneFilter_7and4_545_msk
+# select gene subset here:
+geneSubset_vec=c("1orMore_6990","2orMore_5872","2or2_5509","2and2_2829","7and4_545")
+# change gene subset selection by modifying the following line :
+geneSubsetChoice=4
+#
+(outFileNamePrefix=geneSubset_vec[geneSubsetChoice])
+#
+geneFilter_msk <- geneSelection_l[[paste("geneFilter_",geneSubset_vec[geneSubsetChoice],"_msk",sep="")]] # geneSelection_l$geneFilter_7and4_545_msk
 geneNames_vec <- rownames(rawCnt_cSel_mtx)[geneFilter_msk]
-
+rm(geneSubset_vec,geneSubsetChoice)
+#
 
 # subDir="exp/3_RNAseq_analysis/data"
 subDir="data"
@@ -151,27 +159,27 @@ rm(fileName,subDir)
 activeGenes=unlist(quartilesAdelman)
 
 selTemp=geneSelection_l$geneFilter_1orMore_6990_vec
-cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%")
+cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%",end="\n")
 # 4504 active genes 
 # 64.43 %
 
 selTemp=geneSelection_l$geneFilter_2orMore_5872_vec
-cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%")
+cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%",end="\n")
 # 4096 active genes 
 # 69.75 %
 
 selTemp=geneSelection_l$geneFilter_2or2_5509_vec
-cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%")
+cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%",end="\n")
 # 3888 active genes 
 # 70.58 %
 
 selTemp=geneSelection_l$geneFilter_2and2_2829_vec
-cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%")
+cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%",end="\n")
 # 2097 active genes 
 # 74.13 %
 
 selTemp=geneSelection_l$geneFilter_7and4_545_vec
-cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%")
+cat(length(intersect(selTemp,activeGenes)),"active genes",end="\n") ; cat(round(length(intersect(selTemp,activeGenes))/length(selTemp)*100,2),"%",end="\n")
 # 399 active genes 
 # 73.21 %
 
@@ -355,6 +363,11 @@ var_mtx$deltaNsdVoom=var_mtx$nsdVoomMes4KD - var_mtx$nsdVoomCtrl
 #
 var_mtx=cbind(var_mtx[,6:12],var_mtx[,1:5]) # abominablement moche !!!
 #
+# voom-transformed counts matrix with NA :
+if (identical(dim(rpmCnt_cSel_mtx[geneNames_vec,]),dim(voomCnts_mtx))) {
+  voomCntsNA_mtx=replace(voomCnts_mtx,which(rpmCnt_cSel_mtx[geneNames_vec,]==0),NA)
+}
+#
 ```
 
 
@@ -366,23 +379,27 @@ var_mtx=cbind(var_mtx[,6:12],var_mtx[,1:5]) # abominablement moche !!!
 #
 # delete unrequired objects
 rm(DE_ebayes_sum,DE_ebayes_sorted_sum,DE_treat_sum,DE_treat_sorted_sum)
-rm(design_mtx,voomCnts_mtx,voom_res,voomNorm_res,voomNorm_lmfit)
+rm(design_mtx,voom_res,voomNorm_res,voomNorm_lmfit)
 rm(dds,dds_esf,DE_ebayes,DE_treat,des,deseq_res,dge_l,dgeNorm_l,rLogDds)
-rm(fTest_voom_ll,shapTest_df,shapTestCtrl,shapTestMes4KD)
+rm(fTest_voom_ll,shapTestCtrl,shapTestMes4KD)
 rm(pca,col,groups)
 #
 
-rm(rawCnt_mtx,rawCnt_cSel_mtx,rpmCnt_cSel_mtx,sampleInfo_df)
+rm(rawCnt_mtx,rawCnt_cSel_mtx,sampleInfo_df)
 rm(cellSelection,sc613_sumexp)
 
 # finally, save objects that have to be saved
 #
-fileName="sc_DE_DV_analysisResults.rds"
+fileName=paste("sc_DE_DV_analysisResults_",outFileNamePrefix,".rds",sep="")
 subDir="exp/3_RNAseq_analysis/data"
 #
 saveRDS(
   list(
+    rpmCnt_cSel_mtx=rpmCnt_cSel_mtx,
     rpmCntNA_cSel_mtx=rpmCntNA_cSel_mtx,
+    voomCnts_mtx=voomCnts_mtx,
+    voomCntsNA_mtx=voomCntsNA_mtx,
+    shapTest_df=shapTest_df,
     expr_mtx=expr_mtx,
     var_mtx=var_mtx,
     sInfo_cSel_df=sInfo_cSel_df,
